@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PSO Palawan DTR (WFH)</title>
     <style>
-        /* MODERN RE-STYLING */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -31,7 +30,6 @@
             letter-spacing: -0.01em;
         }
 
-        /* Login Overlay Styling */
         #login-overlay {
             position: fixed; inset: 0; 
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -54,13 +52,13 @@
             width: 100%; padding: 12px; margin: 10px 0; 
             border: 1.5px solid var(--slate-200); border-radius: 8px; 
             font-size: 14px; transition: all 0.2s;
+            box-sizing: border-box;
         }
 
         input:focus, select:focus {
             outline: none; border-color: var(--primary); ring: 2px solid #6366f133;
         }
 
-        /* Sidebar Styling */
         .sidebar { 
             width: 260px; background: white; border-right: 1px solid var(--slate-200);
             padding: 2rem 1.5rem; display: flex; flex-direction: column; 
@@ -69,7 +67,6 @@
 
         .sidebar h2 { font-size: 1.25rem; font-weight: 800; color: var(--primary); border-bottom: 2px solid var(--slate-100); padding-bottom: 1rem; }
 
-        /* Main Content Styling */
         .main-content { flex: 1; padding: 2.5rem; background: var(--slate-50); }
         
         .card { 
@@ -80,7 +77,6 @@
 
         .hidden { display: none !important; }
 
-        /* Button Styling */
         .btn { 
             border: none; color: white; font-weight: 600; cursor: pointer; 
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -96,22 +92,15 @@
         .btn-success { background: var(--success); }
         .btn-warning { background: var(--warning); }
         .btn-outline { background: white; border: 1px solid var(--slate-200); color: var(--slate-700); }
-        .btn-outline:hover { background: var(--slate-100); }
-        
         .btn:disabled { background: var(--slate-200) !important; color: var(--slate-400) !important; cursor: not-allowed; transform: none; }
 
-        /* Table Styling */
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
         th { 
             text-align: left; padding: 14px; background: var(--slate-100); 
             color: var(--slate-700); font-weight: 700; text-transform: uppercase; font-size: 11px;
         }
-        th:first-child { border-radius: 8px 0 0 0; }
-        th:last-child { border-radius: 0 8px 0 0; }
         td { padding: 14px; border-bottom: 1px solid var(--slate-100); }
-        tr:hover td { background-color: #fcfcfd; }
 
-        /* Personnel Tag Styling */
         .staff-tag { 
             display: flex; justify-content: space-between; align-items: center; 
             background: var(--slate-50); padding: 10px 12px; border-radius: 8px; 
@@ -124,19 +113,10 @@
             margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
         }
 
-        #staff-list-admin { 
-            max-height: 250px; overflow-y: auto; 
-            padding-right: 5px; margin-bottom: 1rem;
-        }
+        #staff-list-admin { max-height: 250px; overflow-y: auto; padding-right: 5px; }
 
-        /* Clock Card Specifics */
         #clock-card { text-align: center; border-top: 4px solid var(--primary); }
-        #statusFeedback { font-size: 0.9rem; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); }
-        
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 10px; }
+        #statusFeedback { font-size: 0.9rem; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); display: none; }
     </style>
 </head>
 <body>
@@ -230,14 +210,19 @@
     const ADMIN_PASS = "admin123";
     let currentUser = null, userRole = null;
     
+    // Load data from LocalStorage
     let staff = JSON.parse(localStorage.getItem('entStaff')) || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"];
     let logs = JSON.parse(localStorage.getItem('entLogs')) || [];
     let active = JSON.parse(localStorage.getItem('entActive')) || {};
 
+    // Initialize/Refresh Dropdowns and Lists
     function init() {
         staff.sort();
-        const opts = staff.map(s => `<option value="${s}">${s}</option>`).join('');
-        document.getElementById('userSelect').innerHTML = opts;
+        const userSelect = document.getElementById('userSelect');
+        if (userSelect) {
+            const opts = staff.map(s => `<option value="${s}">${s}</option>`).join('');
+            userSelect.innerHTML = opts;
+        }
         renderStaffList();
     }
 
@@ -251,44 +236,41 @@
         if (role === 'ADMIN') {
             document.getElementById('admin-tools').classList.remove('hidden');
             document.getElementById('admin-view').classList.remove('hidden');
+            render();
         } else {
             document.getElementById('clock-card').classList.remove('hidden');
             updateButtonStates();
         }
-        render();
     }
 
-    function exportToExcel() {
-        if (logs.length === 0) return alert("No logs available to export.");
-        const table = document.getElementById("dtrTable");
-        let html = table.outerHTML;
-        html = html.replace(/<th class="no-export">.*?<\/th>/g, "");
-        html = html.replace(/<td><button.*?<\/button><\/td>/g, "");
-        const url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
-        const link = document.createElement("a");
-        link.download = `PSO_Palawan_DTR_${new Date().toLocaleDateString()}.xls`;
-        link.href = url;
-        link.click();
+    function addStaff() {
+        const input = document.getElementById('newStaffName');
+        const name = input.value.trim();
+        
+        if (!name) return alert("Please enter a name.");
+        if (staff.includes(name)) return alert("Personnel already exists.");
+
+        staff.push(name);
+        input.value = "";
+        save();
+        init(); // This updates the login dropdown and admin list immediately
+        alert(`${name} added to system.`);
     }
 
-    function updateButtonStates() {
-        if (userRole === 'ADMIN') return;
-        const s = active[currentUser];
-        const bIn = document.getElementById('btnClockIn');
-        const bBr = document.getElementById('btnBreak');
-        const bOut = document.getElementById('btnClockOut');
-
-        if (!s) {
-            bIn.disabled = false; bIn.innerText = "Clock In";
-            bBr.disabled = true; bBr.innerText = "Break";
-            bOut.disabled = true; bOut.innerText = "Clock Out";
-        } else {
-            bIn.disabled = true; bIn.innerText = "Clocked In";
-            bBr.disabled = false;
-            bBr.innerText = s.onBreak ? "Break In" : "Break Out";
-            bOut.disabled = s.onBreak;
-            bOut.innerText = "Clock Out";
+    function deleteStaff(n) {
+        if(confirm(`Remove ${n} from the system?`)) {
+            staff = staff.filter(x => x !== n);
+            save();
+            init();
         }
+    }
+
+    function renderStaffList() {
+        document.getElementById('staff-list-admin').innerHTML = staff.map(s => `
+            <div class="staff-tag">
+                <span>${s}</span>
+                <button onclick="deleteStaff('${s}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:16px;">&times;</button>
+            </div>`).join('');
     }
 
     function clockAction(type) {
@@ -322,10 +304,29 @@
             });
             delete active[currentUser];
             fb.innerText = "Shift ended at " + timeStr;
-            save(); updateButtonStates();
+            save(); updateButtonStates(); render();
             return;
         }
-        save(); updateButtonStates(); render();
+        save(); updateButtonStates();
+    }
+
+    function updateButtonStates() {
+        if (userRole === 'ADMIN') return;
+        const s = active[currentUser];
+        const bIn = document.getElementById('btnClockIn');
+        const bBr = document.getElementById('btnBreak');
+        const bOut = document.getElementById('btnClockOut');
+
+        if (!s) {
+            bIn.disabled = false; bIn.innerText = "Clock In";
+            bBr.disabled = true; bBr.innerText = "Break";
+            bOut.disabled = true;
+        } else {
+            bIn.disabled = true; bIn.innerText = "In Progress";
+            bBr.disabled = false;
+            bBr.innerText = s.onBreak ? "Return from Break" : "Break Out";
+            bOut.disabled = s.onBreak;
+        }
     }
 
     function render() {
@@ -343,44 +344,44 @@
             </tr>`).join('');
     }
 
-    function deleteLog(i) { if(confirm("Delete this log permanently?")) { logs.splice(i, 1); save(); render(); } }
-
-    function clearLogs() {
-        const confirmPass = prompt("Enter Admin Password to wipe all data:");
-        if (confirmPass === null) return;
-        if (confirmPass === ADMIN_PASS) {
-            localStorage.clear();
-            alert("System Reset Complete.");
-            location.reload();
-        } else {
-            alert("Incorrect password.");
-        }
-    }
-
-    function addStaff() {
-        let n = document.getElementById('newStaffName').value.trim();
-        if (n && !staff.includes(n)) { staff.push(n); document.getElementById('newStaffName').value = ""; save(); init(); }
-    }
-    function deleteStaff(n) { if(confirm(`Remove ${n} from the system?`)) { staff = staff.filter(x => x !== n); save(); init(); } }
-    function renderStaffList() {
-        document.getElementById('staff-list-admin').innerHTML = staff.map(s => `
-            <div class="staff-tag"><span>${s}</span><button onclick="deleteStaff('${s}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;">&times;</button></div>`).join('');
-    }
     function msToTime(ms) {
         let h = Math.floor(ms / 3600000);
         let m = Math.floor((ms % 3600000) / 60000);
         return `${h}h ${m}m`;
     }
+
     function save() {
         localStorage.setItem('entStaff', JSON.stringify(staff));
         localStorage.setItem('entLogs', JSON.stringify(logs));
         localStorage.setItem('entActive', JSON.stringify(active));
     }
-    function verifyAdmin() { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Invalid Credentials"); }
+
+    function deleteLog(i) { if(confirm("Delete log?")) { logs.splice(i, 1); save(); render(); } }
+
+    function clearLogs() {
+        if (prompt("Type 'admin123' to reset everything:") === ADMIN_PASS) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function exportToExcel() {
+        const table = document.getElementById("dtrTable");
+        let html = table.outerHTML.replace(/<th class="no-export">.*?<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, "");
+        const url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+        const link = document.createElement("a");
+        link.download = `DTR_Export_${new Date().toLocaleDateString()}.xls`;
+        link.href = url;
+        link.click();
+    }
+
+    function verifyAdmin() { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); }
+    
     function toggleLogin(isA) { 
         document.getElementById('admin-login-box').classList.toggle('hidden', !isA); 
         document.getElementById('staff-login-box').classList.toggle('hidden', isA); 
     }
+
     init();
 </script>
 </body>
