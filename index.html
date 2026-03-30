@@ -198,40 +198,34 @@
         let currentUser = null, userRole = null;
         let staff = [], logs = [], active = {};
 
-        // --- REAL-TIME SYNC ENGINE ---
         onValue(ref(db, 'pso/'), (snapshot) => {
             const data = snapshot.val() || {};
             
-            // Sync Staff List
-            staff = data.staff || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"];
+            // Sync Staff List & Ensure Alphabetical Order
+            staff = (data.staff || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"]).sort();
             
-            // Sync Logs & Sort Newest First
             const logsObj = data.logs || {};
             logs = Object.keys(logsObj).map(key => ({...logsObj[key], id: key}));
             logs.sort((a, b) => new Date(b.date + ' ' + b.out) - new Date(a.date + ' ' + a.in));
             
-            // Sync Active Shifts
             active = data.active || {};
             
             refreshUI();
         });
 
         function refreshUI() {
-            // Update Staff Selection
             const userSelect = document.getElementById('userSelect');
             if (userSelect) {
-                userSelect.innerHTML = staff.sort().map(s => `<option value="${s}">${s}</option>`).join('');
+                // Already sorted in the Firebase listener
+                userSelect.innerHTML = staff.map(s => `<option value="${s}">${s}</option>`).join('');
             }
 
-            // Update Admin View Personnel Tags
             renderStaffList();
             
-            // CRITICAL: Refresh table every time Firebase data changes
             if (userRole === 'ADMIN') {
                 render(); 
             }
             
-            // Refresh Button States
             if (currentUser && userRole === 'USER') {
                 updateButtonStates();
             }
@@ -271,10 +265,20 @@
             } 
             else if (type === 'BREAK' && s) {
                 if (!s.onBreak) {
+                    // Start Break
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
+                    fb.innerText = "Break started at " + timeStr;
                 } else {
-                    const newTotal = (s.breakTotal || 0) + (now - s.breakStart);
+                    // Return from Break - VALIDATION: Must be at least 1 minute (60,000ms)
+                    const breakDuration = now - s.breakStart;
+                    if (breakDuration < 60000) {
+                        alert("Validation: Break duration must be at least 1 minute.");
+                        return;
+                    }
+
+                    const newTotal = (s.breakTotal || 0) + breakDuration;
                     update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: newTotal, onBreak: false });
+                    fb.innerText = "Returned from break at " + timeStr;
                 }
             } 
             else if (type === 'OUT' && s) {
@@ -291,16 +295,16 @@
 
         window.addStaff = function() {
             const name = document.getElementById('newStaffName').value.trim();
-            if (!name || staff.includes(name)) return alert("Invalid name.");
+            if (!name || staff.includes(name)) return alert("Invalid or duplicate name.");
             staff.push(name);
-            set(ref(db, 'pso/staff'), staff);
+            set(ref(db, 'pso/staff'), staff.sort()); // Sort before saving
             document.getElementById('newStaffName').value = "";
         }
 
         window.deleteStaff = function(n) {
             if(confirm(`Remove ${n}?`)) {
                 const newStaff = staff.filter(x => x !== n);
-                set(ref(db, 'pso/staff'), newStaff);
+                set(ref(db, 'pso/staff'), newStaff.sort());
             }
         }
 
@@ -320,6 +324,7 @@
         function renderStaffList() {
             const container = document.getElementById('staff-list-admin');
             if (container) {
+                // staff is already sorted in the listener
                 container.innerHTML = staff.map(s => `
                     <div class="staff-tag"><span>${s}</span>
                     <button onclick="deleteStaff('${s}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold;">&times;</button></div>`).join('');
