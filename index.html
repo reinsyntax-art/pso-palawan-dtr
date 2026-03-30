@@ -334,6 +334,15 @@ const firebaseConfig = {
             let html = table.outerHTML.replace(/<th>Action<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, "");
             window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
         };
+		
+		window.clearAllLogs = function() {
+    if (confirm("Are you sure you want to delete ALL history? This cannot be undone.")) {
+        if (prompt("Type 'RESET' to confirm") === "RESET") {
+            remove(ref(db, 'pso/logs'));
+            alert("All logs cleared.");
+        }
+    }
+}
     </script>
 </body>
 </html>
