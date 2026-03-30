@@ -58,10 +58,10 @@
         .sidebar { 
             width: 260px; background: white; border-right: 1px solid var(--slate-200);
             padding: 2rem 1.5rem; display: flex; flex-direction: column; 
-            height: 100vh; position: sticky; top: 0; 
+            height: 100vh; position: sticky; top: 0; box-sizing: border-box;
         }
 
-        .sidebar h2 { font-size: 1.25rem; font-weight: 800; color: var(--primary); border-bottom: 2px solid var(--slate-100); padding-bottom: 1rem; }
+        .sidebar h2 { font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
 
         .main-content { flex: 1; padding: 2.5rem; background: var(--slate-50); }
         
@@ -107,6 +107,14 @@
 
         #clock-card { text-align: center; border-top: 4px solid var(--primary); }
         #statusFeedback { font-size: 0.9rem; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); display: none; }
+        
+        #live-clock {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin: 10px 0 25px 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
     </style>
 </head>
 <body>
@@ -135,7 +143,20 @@
     </div>
 
     <aside class="sidebar">
-        <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management System</span></h2>
+
+
+        <div>
+            <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management System</span></h2>
+        
+		<div id="user-info" class="hidden" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 1.5rem;">
+            <p style="font-size: 10px; color: var(--slate-400); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">User Session</p>
+            <h3 id="displayUserName" style="margin: 0; color: var(--dark); font-size: 1.1rem; font-weight: 800;">--</h3>
+        </div>
+		
+            <div id="top-nav-actions" class="hidden" style="margin-top: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
+                <button class="btn btn-danger" style="width: 100%; font-size: 10px;" onclick="location.reload()">Sign Out</button>
+            </div>
+        </div>
         
         <div id="admin-tools" class="hidden">
             <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Manage Personnel</div>
@@ -146,12 +167,6 @@
             <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Operations</div>
             <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="exportToExcel()">Download XLS</button>
             <button class="btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="clearAllLogs()">Clear All Logs</button>
-        </div>
-
-        <div id="user-info" class="hidden" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--slate-100);">
-            <p style="font-size: 10px; color: var(--slate-400); margin-bottom: 4px; font-weight: 700;">ACTIVE SESSION</p>
-            <h3 id="displayUserName" style="margin: 0; color: var(--dark); font-size: 1rem;">--</h3>
-            <button class="btn btn-outline" style="margin-top: 20px; width: 100%; font-size: 10px;" onclick="location.reload()">Sign Out</button>
         </div>
     </aside>
 
@@ -179,7 +194,8 @@
         </div>
 
         <div class="card hidden" id="clock-card" style="max-width: 480px; margin: 60px auto;">
-            <h3 style="margin-top:0; font-weight: 800;">Time Tracking</h3>
+            <h3 style="margin-top:0; font-weight: 800; color: var(--slate-400); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">Time Tracking</h3>
+            <div id="live-clock">00:00:00</div>
             <div style="display: flex; gap: 12px;">
                 <button id="btnClockIn" class="btn btn-success" style="flex:1" onclick="clockAction('IN')">Clock In</button>
                 <button id="btnBreak" class="btn btn-warning" style="flex:1" onclick="clockAction('BREAK')">Break</button>
@@ -211,12 +227,34 @@
         let currentUser = null, userRole = null;
         let staff = [], logs = [], active = {};
 
+        function updateLiveClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const timeStr = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
+            const clockEl = document.getElementById('live-clock');
+            if(clockEl) clockEl.innerText = timeStr;
+        }
+        setInterval(updateLiveClock, 1000);
+
+        function getFormattedTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+
         onValue(ref(db, 'pso/'), (snapshot) => {
             const data = snapshot.val() || {};
             staff = (data.staff || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"]).sort();
             const logsObj = data.logs || {};
             logs = Object.keys(logsObj).map(key => ({...logsObj[key], id: key}));
-            logs.sort((a, b) => new Date(b.date + ' ' + b.out) - new Date(a.date + ' ' + a.in));
+            logs.sort((a, b) => new Date(b.date + ' ' + (b.outRaw || b.out)) - new Date(a.date + ' ' + (a.inRaw || a.in)));
             active = data.active || {};
             refreshUI();
         });
@@ -226,17 +264,10 @@
             if (userSelect) {
                 userSelect.innerHTML = staff.map(s => `<option value="${s}">${s}</option>`).join('');
             }
-
             renderStaffList();
             renderLiveStatus();
-            
-            if (userRole === 'ADMIN') {
-                render(); 
-            }
-            
-            if (currentUser && userRole === 'USER') {
-                updateButtonStates();
-            }
+            if (userRole === 'ADMIN') render(); 
+            if (currentUser && userRole === 'USER') updateButtonStates();
         }
 
         window.login = function(role) {
@@ -245,6 +276,7 @@
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('displayUserName').innerText = currentUser;
             document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('top-nav-actions').classList.remove('hidden');
             
             if (role === 'ADMIN') {
                 document.getElementById('admin-tools').classList.remove('hidden');
@@ -258,8 +290,7 @@
 
         window.clockAction = function(type) {
             const now = Date.now();
-            // REMOVES AM/PM while maintaining 12h logic
-            const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const timeStr = getFormattedTime();
             const userKey = currentUser.replace(/\./g, '_');
             let s = active[userKey];
             let fb = document.getElementById('statusFeedback');
@@ -301,13 +332,11 @@
         function renderLiveStatus() {
             const container = document.getElementById('liveStatusContainer');
             if (!container) return;
-
             container.innerHTML = staff.map(name => {
                 const userKey = name.replace(/\./g, '_');
                 const session = active[userKey];
                 let statusClass = 'status-offline';
                 let statusText = 'Offline';
-
                 if (session) {
                     if (session.onBreak) {
                         statusClass = 'status-break';
@@ -317,7 +346,6 @@
                         statusText = 'Working';
                     }
                 }
-
                 return `
                     <div style="background:var(--slate-50); padding:12px; border-radius:8px; border:1px solid var(--slate-200); display:flex; flex-direction:column; gap:5px;">
                         <span style="font-weight:700; font-size:12px; color:var(--dark);">${name}</span>
@@ -389,7 +417,7 @@
 
         function msToTime(ms) {
             let h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
-            return `${h}h ${m}m`;
+            return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
         }
 
         window.verifyAdmin = () => { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); };
