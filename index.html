@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSO Palawan DTR (WFH)</title>
+    <title>PSO Palawan DTR (Cloud)</title>
     <style>
         :root {
             --primary: #4f46e5;
@@ -55,10 +55,6 @@
             box-sizing: border-box;
         }
 
-        input:focus, select:focus {
-            outline: none; border-color: var(--primary); ring: 2px solid #6366f133;
-        }
-
         .sidebar { 
             width: 260px; background: white; border-right: 1px solid var(--slate-200);
             padding: 2rem 1.5rem; display: flex; flex-direction: column; 
@@ -85,35 +81,22 @@
         }
 
         .btn:hover { filter: brightness(110%); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-
         .btn-primary { background: var(--primary); }
         .btn-danger { background: var(--danger); }
         .btn-success { background: var(--success); }
         .btn-warning { background: var(--warning); }
         .btn-outline { background: white; border: 1px solid var(--slate-200); color: var(--slate-700); }
-        .btn:disabled { background: var(--slate-200) !important; color: var(--slate-400) !important; cursor: not-allowed; transform: none; }
+        .btn:disabled { background: var(--slate-200) !important; color: var(--slate-400) !important; cursor: not-allowed; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-        th { 
-            text-align: left; padding: 14px; background: var(--slate-100); 
-            color: var(--slate-700); font-weight: 700; text-transform: uppercase; font-size: 11px;
-        }
+        th { text-align: left; padding: 14px; background: var(--slate-100); color: var(--slate-700); font-weight: 700; text-transform: uppercase; font-size: 11px; }
         td { padding: 14px; border-bottom: 1px solid var(--slate-100); }
 
         .staff-tag { 
             display: flex; justify-content: space-between; align-items: center; 
             background: var(--slate-50); padding: 10px 12px; border-radius: 8px; 
             margin-bottom: 8px; font-size: 13px; border: 1px solid var(--slate-200);
-            color: var(--dark); font-weight: 500;
         }
-
-        .admin-section-title { 
-            font-size: 10px; color: var(--slate-400); font-weight: 700;
-            margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
-        }
-
-        #staff-list-admin { max-height: 250px; overflow-y: auto; padding-right: 5px; }
 
         #clock-card { text-align: center; border-top: 4px solid var(--primary); }
         #statusFeedback { font-size: 0.9rem; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); display: none; }
@@ -124,7 +107,7 @@
     <div id="login-overlay">
         <div class="login-card">
             <h2 style="font-size: 1.4rem;">PSO Palawan</h2>
-            <p style="color: var(--slate-400); font-size: 14px; margin-top: -15px; margin-bottom: 25px;">Daily Time Record Portal</p>
+            <p style="color: var(--slate-400); font-size: 14px; margin-top: -15px; margin-bottom: 25px;">Cloud DTR Portal</p>
             
             <div id="admin-login-box" class="hidden">
                 <input type="password" id="adminPass" placeholder="Enter Admin Password">
@@ -135,7 +118,7 @@
             <div id="staff-login-box">
                 <label style="font-size: 11px; text-align: left; display: block; color: var(--slate-400); font-weight: 600;">SELECT PERSONNEL</label>
                 <select id="userSelect"></select>
-                <button class="btn btn-success" style="width:100%; margin-top: 10px; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);" onclick="login('USER')">Clock In / Out</button>
+                <button class="btn btn-success" style="width:100%; margin-top: 10px;" onclick="login('USER')">Clock In / Out</button>
                 <div style="margin: 20px 0; border-top: 1px solid var(--slate-100); position: relative;">
                     <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; font-size: 10px; color: var(--slate-400);">OR</span>
                 </div>
@@ -145,17 +128,16 @@
     </div>
 
     <aside class="sidebar">
-        <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">WFH Management System</span></h2>
+        <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management System</span></h2>
         
         <div id="admin-tools" class="hidden">
-            <div class="admin-section-title">Manage Personnel</div>
+            <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Manage Personnel</div>
             <input type="text" id="newStaffName" placeholder="Full Name">
             <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="addStaff()">+ Add Member</button>
             <div id="staff-list-admin"></div>
             
-            <div class="admin-section-title">Operations</div>
+            <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Operations</div>
             <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="exportToExcel()">Download XLS</button>
-            <button class="btn btn-danger" style="width: 100%; margin-top: 10px; opacity: 0.8;" onclick="clearLogs()">Reset System</button>
         </div>
 
         <div id="user-info" class="hidden" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--slate-100);">
@@ -168,22 +150,12 @@
     <main class="main-content">
         <div id="admin-view" class="hidden">
             <div class="card">
-                <h4 style="color: var(--dark); margin-top:0; display: flex; align-items: center; gap: 10px;">
-                    <span style="background: var(--primary); color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 14px;">📋</span>
-                    Attendance History
-                </h4>
+                <h4 style="color: var(--dark); margin-top:0;">📋 Attendance History (Cloud)</h4>
                 <div style="overflow-x: auto; margin-top: 20px;">
                     <table id="dtrTable">
                         <thead>
                             <tr>
-                                <th>Personnel</th>
-                                <th>Date</th>
-                                <th>In</th>
-                                <th>Break Out</th>
-                                <th>Break In</th>
-                                <th>Out</th>
-                                <th>Total</th>
-                                <th class="no-export">Action</th>
+                                <th>Personnel</th><th>Date</th><th>In</th><th>Break Out</th><th>Break In</th><th>Out</th><th>Total</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="logTableBody"></tbody>
@@ -194,195 +166,174 @@
 
         <div class="card hidden" id="clock-card" style="max-width: 480px; margin: 60px auto;">
             <h3 style="margin-top:0; font-weight: 800;">Time Tracking</h3>
-            <p style="color: var(--slate-400); font-size: 13px; margin-bottom: 25px;">Please select your action for today's shift.</p>
             <div style="display: flex; gap: 12px;">
                 <button id="btnClockIn" class="btn btn-success" style="flex:1" onclick="clockAction('IN')">Clock In</button>
                 <button id="btnBreak" class="btn btn-warning" style="flex:1" onclick="clockAction('BREAK')">Break</button>
                 <button id="btnClockOut" class="btn btn-danger" style="flex:1" onclick="clockAction('OUT')">Clock Out</button>
             </div>
-            <div style="margin-top: 25px;">
-                <p id="statusFeedback"></p>
-            </div>
+            <p id="statusFeedback" style="margin-top: 20px;"></p>
         </div>
     </main>
 
-<script>
-    const ADMIN_PASS = "admin123";
-    let currentUser = null, userRole = null;
-    
-    // Load data from LocalStorage
-    let staff = JSON.parse(localStorage.getItem('entStaff')) || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"];
-    let logs = JSON.parse(localStorage.getItem('entLogs')) || [];
-    let active = JSON.parse(localStorage.getItem('entActive')) || {};
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Initialize/Refresh Dropdowns and Lists
-    function init() {
-        staff.sort();
-        const userSelect = document.getElementById('userSelect');
-        if (userSelect) {
-            const opts = staff.map(s => `<option value="${s}">${s}</option>`).join('');
-            userSelect.innerHTML = opts;
-        }
-        renderStaffList();
-    }
+        // IMPORTANT: PASTE YOUR FIREBASE CONFIG HERE
+const firebaseConfig = {
+  apiKey: "AIzaSyCkdqDUEOI6gIeCC1_PTBvqqQlcmgvvQ4E",
+  authDomain: "pso-palawan-dtr.firebaseapp.com",
+  databaseURL: "https://pso-palawan-dtr-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "pso-palawan-dtr",
+  storageBucket: "pso-palawan-dtr.firebasestorage.app",
+  messagingSenderId: "627132201923",
+  appId: "1:627132201923:web:a13a1c47a0f6f0f13d1b76",
+  measurementId: "G-E433TPGB63"
+};
 
-    function login(role) {
-        userRole = role;
-        currentUser = (role === 'ADMIN') ? 'Administrator' : document.getElementById('userSelect').value;
-        document.getElementById('login-overlay').classList.add('hidden');
-        document.getElementById('displayUserName').innerText = currentUser;
-        document.getElementById('user-info').classList.remove('hidden');
-        
-        if (role === 'ADMIN') {
-            document.getElementById('admin-tools').classList.remove('hidden');
-            document.getElementById('admin-view').classList.remove('hidden');
-            render();
-        } else {
-            document.getElementById('clock-card').classList.remove('hidden');
-            updateButtonStates();
-        }
-    }
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    function addStaff() {
-        const input = document.getElementById('newStaffName');
-        const name = input.value.trim();
-        
-        if (!name) return alert("Please enter a name.");
-        if (staff.includes(name)) return alert("Personnel already exists.");
+        const ADMIN_PASS = "admin123";
+        let currentUser = null, userRole = null;
+        let staff = [], logs = [], active = {};
 
-        staff.push(name);
-        input.value = "";
-        save();
-        init(); // This updates the login dropdown and admin list immediately
-        alert(`${name} added to system.`);
-    }
+        // Real-time synchronization
+        onValue(ref(db, 'pso/'), (snapshot) => {
+            const data = snapshot.val() || {};
+            staff = data.staff || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"];
+            
+            const logsObj = data.logs || {};
+            logs = Object.keys(logsObj).map(key => ({...logsObj[key], id: key})).reverse();
+            
+            active = data.active || {};
+            
+            refreshUI();
+        });
 
-    function deleteStaff(n) {
-        if(confirm(`Remove ${n} from the system?`)) {
-            staff = staff.filter(x => x !== n);
-            save();
-            init();
-        }
-    }
-
-    function renderStaffList() {
-        document.getElementById('staff-list-admin').innerHTML = staff.map(s => `
-            <div class="staff-tag">
-                <span>${s}</span>
-                <button onclick="deleteStaff('${s}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:16px;">&times;</button>
-            </div>`).join('');
-    }
-
-    function clockAction(type) {
-        const now = Date.now();
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        let s = active[currentUser];
-        let fb = document.getElementById('statusFeedback');
-        fb.style.display = "block";
-
-        if (type === 'IN') {
-            active[currentUser] = { 
-                start: now, startTime: timeStr, date: new Date().toLocaleDateString(), 
-                breakOut: "--", breakIn: "--", breakTotal: 0, onBreak: false 
-            };
-            fb.innerText = "Shift started at " + timeStr;
-        } 
-        else if (type === 'BREAK' && s) {
-            if (!s.onBreak) {
-                s.breakStart = now; s.breakOut = timeStr; s.onBreak = true;
-                fb.innerText = "Break started at " + timeStr;
-            } else {
-                s.breakIn = timeStr; s.breakTotal += (now - s.breakStart); s.onBreak = false;
-                fb.innerText = "Break ended at " + timeStr;
+        function refreshUI() {
+            const userSelect = document.getElementById('userSelect');
+            if (userSelect) {
+                userSelect.innerHTML = staff.sort().map(s => `<option value="${s}">${s}</option>`).join('');
             }
-        } 
-        else if (type === 'OUT' && s) {
-            logs.unshift({
-                name: currentUser, date: s.date, in: s.startTime,
-                bOut: s.breakOut, bIn: s.breakIn, out: timeStr,
-                netMs: (now - s.start) - s.breakTotal
-            });
-            delete active[currentUser];
-            fb.innerText = "Shift ended at " + timeStr;
-            save(); updateButtonStates(); render();
-            return;
+            renderStaffList();
+            if (userRole === 'ADMIN') render();
+            if (currentUser && userRole === 'USER') updateButtonStates();
         }
-        save(); updateButtonStates();
-    }
 
-    function updateButtonStates() {
-        if (userRole === 'ADMIN') return;
-        const s = active[currentUser];
-        const bIn = document.getElementById('btnClockIn');
-        const bBr = document.getElementById('btnBreak');
-        const bOut = document.getElementById('btnClockOut');
-
-        if (!s) {
-            bIn.disabled = false; bIn.innerText = "Clock In";
-            bBr.disabled = true; bBr.innerText = "Break";
-            bOut.disabled = true;
-        } else {
-            bIn.disabled = true; bIn.innerText = "In Progress";
-            bBr.disabled = false;
-            bBr.innerText = s.onBreak ? "Return from Break" : "Break Out";
-            bOut.disabled = s.onBreak;
+        window.login = function(role) {
+            userRole = role;
+            currentUser = (role === 'ADMIN') ? 'Administrator' : document.getElementById('userSelect').value;
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('displayUserName').innerText = currentUser;
+            document.getElementById('user-info').classList.remove('hidden');
+            
+            if (role === 'ADMIN') {
+                document.getElementById('admin-tools').classList.remove('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+            } else {
+                document.getElementById('clock-card').classList.remove('hidden');
+                updateButtonStates();
+            }
         }
-    }
 
-    function render() {
-        if (userRole !== 'ADMIN') return;
-        document.getElementById('logTableBody').innerHTML = logs.map((l, i) => `
-            <tr>
-                <td><span style="font-weight:600">${l.name}</span></td>
-                <td style="color:var(--slate-400)">${l.date}</td>
-                <td style="color:var(--success); font-weight:600">${l.in}</td>
-                <td style="color:var(--warning)">${l.bOut}</td>
-                <td style="color:var(--warning)">${l.bIn}</td>
-                <td style="color:var(--danger); font-weight:600">${l.out}</td>
-                <td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px; font-weight:600">${msToTime(l.netMs)}</span></td>
-                <td><button onclick="deleteLog(${i})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:18px;">&times;</button></td>
-            </tr>`).join('');
-    }
+        window.clockAction = function(type) {
+            const now = Date.now();
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const userKey = currentUser.replace(/\./g, '_');
+            let s = active[userKey];
+            let fb = document.getElementById('statusFeedback');
+            fb.style.display = "block";
 
-    function msToTime(ms) {
-        let h = Math.floor(ms / 3600000);
-        let m = Math.floor((ms % 3600000) / 60000);
-        return `${h}h ${m}m`;
-    }
-
-    function save() {
-        localStorage.setItem('entStaff', JSON.stringify(staff));
-        localStorage.setItem('entLogs', JSON.stringify(logs));
-        localStorage.setItem('entActive', JSON.stringify(active));
-    }
-
-    function deleteLog(i) { if(confirm("Delete log?")) { logs.splice(i, 1); save(); render(); } }
-
-    function clearLogs() {
-        if (prompt("Type 'admin123' to reset everything:") === ADMIN_PASS) {
-            localStorage.clear();
-            location.reload();
+            if (type === 'IN') {
+                set(ref(db, 'pso/active/' + userKey), { 
+                    start: now, startTime: timeStr, date: new Date().toLocaleDateString(), 
+                    breakOut: "--", breakIn: "--", breakTotal: 0, onBreak: false 
+                });
+                fb.innerText = "Shift started at " + timeStr;
+            } 
+            else if (type === 'BREAK' && s) {
+                if (!s.onBreak) {
+                    update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
+                } else {
+                    const newTotal = (s.breakTotal || 0) + (now - s.breakStart);
+                    update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: newTotal, onBreak: false });
+                }
+            } 
+            else if (type === 'OUT' && s) {
+                const logEntry = {
+                    name: currentUser, date: s.date, in: s.startTime,
+                    bOut: s.breakOut, bIn: s.breakIn, out: timeStr,
+                    netMs: (now - s.start) - (s.breakTotal || 0)
+                };
+                push(ref(db, 'pso/logs'), logEntry);
+                remove(ref(db, 'pso/active/' + userKey));
+                fb.innerText = "Shift ended at " + timeStr;
+            }
         }
-    }
 
-    function exportToExcel() {
-        const table = document.getElementById("dtrTable");
-        let html = table.outerHTML.replace(/<th class="no-export">.*?<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, "");
-        const url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
-        const link = document.createElement("a");
-        link.download = `DTR_Export_${new Date().toLocaleDateString()}.xls`;
-        link.href = url;
-        link.click();
-    }
+        window.addStaff = function() {
+            const name = document.getElementById('newStaffName').value.trim();
+            if (!name || staff.includes(name)) return alert("Invalid name.");
+            staff.push(name);
+            set(ref(db, 'pso/staff'), staff);
+            document.getElementById('newStaffName').value = "";
+        }
 
-    function verifyAdmin() { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); }
-    
-    function toggleLogin(isA) { 
-        document.getElementById('admin-login-box').classList.toggle('hidden', !isA); 
-        document.getElementById('staff-login-box').classList.toggle('hidden', isA); 
-    }
+        window.deleteStaff = function(n) {
+            if(confirm(`Remove ${n}?`)) {
+                const newStaff = staff.filter(x => x !== n);
+                set(ref(db, 'pso/staff'), newStaff);
+            }
+        }
 
-    init();
-</script>
+        window.deleteLog = function(id) {
+            if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id));
+        }
+
+        function renderStaffList() {
+            document.getElementById('staff-list-admin').innerHTML = staff.map(s => `
+                <div class="staff-tag"><span>${s}</span>
+                <button onclick="deleteStaff('${s}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold;">&times;</button></div>`).join('');
+        }
+
+        function render() {
+            document.getElementById('logTableBody').innerHTML = logs.map((l) => `
+                <tr>
+                    <td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td>
+                    <td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td>
+                    <td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td>
+                    <td><button onclick="deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:18px;">&times;</button></td>
+                </tr>`).join('');
+        }
+
+        function updateButtonStates() {
+            const userKey = currentUser ? currentUser.replace(/\./g, '_') : null;
+            const s = active[userKey];
+            const bIn = document.getElementById('btnClockIn'), bBr = document.getElementById('btnBreak'), bOut = document.getElementById('btnClockOut');
+            if(!bIn) return;
+            bIn.disabled = !!s;
+            bBr.disabled = !s;
+            bOut.disabled = !s || s?.onBreak;
+            if (s) bBr.innerText = s.onBreak ? "Return from Break" : "Break Out";
+        }
+
+        function msToTime(ms) {
+            let h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+            return `${h}h ${m}m`;
+        }
+
+        window.verifyAdmin = () => { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); };
+        window.toggleLogin = (isA) => { 
+            document.getElementById('admin-login-box').classList.toggle('hidden', !isA);
+            document.getElementById('staff-login-box').classList.toggle('hidden', isA);
+        };
+        
+        window.exportToExcel = () => {
+            const table = document.getElementById("dtrTable");
+            let html = table.outerHTML.replace(/<th>Action<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, "");
+            window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
+        };
+    </script>
 </body>
 </html>
