@@ -112,7 +112,7 @@
         tr:hover td { background-color: #fcfcfd; }
 
         /* Personnel Tag Styling */
-        .staff-tag { 
+        .-tag { 
             display: flex; justify-content: space-between; align-items: center; 
             background: var(--slate-50); padding: 10px 12px; border-radius: 8px; 
             margin-bottom: 8px; font-size: 13px; border: 1px solid var(--slate-200);
@@ -124,7 +124,7 @@
             margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
         }
 
-        #staff-list-admin { 
+        #-list-admin { 
             max-height: 250px; overflow-y: auto; 
             padding-right: 5px; margin-bottom: 1rem;
         }
@@ -149,10 +149,10 @@
             <div id="admin-login-box" class="hidden">
                 <input type="password" id="adminPass" placeholder="Enter Admin Password">
                 <button class="btn btn-primary" style="width:100%; margin-top: 10px;" onclick="verifyAdmin()">Access Dashboard</button>
-                <p style="font-size:12px; cursor:pointer; color:var(--primary); margin-top: 15px;" onclick="toggleLogin(false)">← Switch to Staff Login</p>
+                <p style="font-size:12px; cursor:pointer; color:var(--primary); margin-top: 15px;" onclick="toggleLogin(false)">← Switch to  Login</p>
             </div>
 
-            <div id="staff-login-box">
+            <div id="-login-box">
                 <label style="font-size: 11px; text-align: left; display: block; color: var(--slate-400); font-weight: 600;">SELECT PERSONNEL</label>
                 <select id="userSelect"></select>
                 <button class="btn btn-success" style="width:100%; margin-top: 10px; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);" onclick="login('USER')">Clock In / Out</button>
@@ -169,9 +169,9 @@
         
         <div id="admin-tools" class="hidden">
             <div class="admin-section-title">Manage Personnel</div>
-            <input type="text" id="newStaffName" placeholder="Full Name">
-            <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="addStaff()">+ Add Member</button>
-            <div id="staff-list-admin"></div>
+            <input type="text" id="newName" placeholder="Full Name">
+            <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="add()">+ Add Member</button>
+            <div id="-list-admin"></div>
             
             <div class="admin-section-title">Operations</div>
             <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="exportToExcel()">Download XLS</button>
@@ -230,7 +230,7 @@
     const ADMIN_PASS = "admin123";
     let currentUser = null, userRole = null;
     
-    let staff = JSON.parse(localStorage.getItem('entStaff')) || ["John Doe", "Jane Smith"];
+    let  = JSON.parse(localStorage.getItem('entStaff')) || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz", "Marnito C. Andrada"];
     let logs = JSON.parse(localStorage.getItem('entLogs')) || [];
     let active = JSON.parse(localStorage.getItem('entActive')) || {};
 
