@@ -258,8 +258,8 @@
 
         window.clockAction = function(type) {
             const now = Date.now();
-            // REMOVE AM/PM: Using 24-hour format
-            const timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+            // REMOVES AM/PM while maintaining 12h logic
+            const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             const userKey = currentUser.replace(/\./g, '_');
             let s = active[userKey];
             let fb = document.getElementById('statusFeedback');
@@ -267,7 +267,7 @@
 
             if (type === 'IN') {
                 set(ref(db, 'pso/active/' + userKey), { 
-                    name: currentUser, // Added for live status sync
+                    name: currentUser, 
                     start: now, startTime: timeStr, date: new Date().toLocaleDateString(), 
                     breakOut: "--", breakIn: "--", breakTotal: 0, onBreak: false 
                 });
