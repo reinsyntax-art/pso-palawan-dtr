@@ -382,8 +382,8 @@
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
                 } else {
 			const breakDuration = now - s.breakStart;
-			if (breakDuration < 600000) { // 10 minutes in milliseconds
-			alert("Validation: Break duration must be at least 10 minutes.");
+			if (breakDuration < 60000) { // 10 minutes in milliseconds
+			alert("Validation: Break duration must be at least 1 minute.");
 			return;
 }
                     const newTotal = (s.breakTotal || 0) + breakDuration;
