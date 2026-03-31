@@ -59,6 +59,7 @@
             width: 260px; background: white; border-right: 1px solid var(--slate-200);
             padding: 2rem 1.5rem; display: flex; flex-direction: column; 
             height: 100vh; position: sticky; top: 0; box-sizing: border-box;
+            overflow-y: auto;
         }
 
         .sidebar h2 { font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
@@ -94,8 +95,8 @@
 
         .staff-tag { 
             display: flex; justify-content: space-between; align-items: center; 
-            background: var(--slate-50); padding: 10px 12px; border-radius: 8px; 
-            margin-bottom: 8px; font-size: 13px; border: 1px solid var(--slate-200);
+            background: var(--slate-50); padding: 8px 12px; border-radius: 8px; 
+            margin-bottom: 6px; font-size: 12px; border: 1px solid var(--slate-200);
         }
 
         .status-badge {
@@ -115,6 +116,21 @@
             margin: 10px 0 25px 0;
             font-family: 'Courier New', Courier, monospace;
         }
+
+        details summary {
+            list-style: none;
+            cursor: pointer;
+            font-size: 10px;
+            color: var(--slate-400);
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        details summary::after { content: '▼'; font-size: 8px; }
+        details[open] summary::after { content: '▲'; }
     </style>
 </head>
 <body>
@@ -133,6 +149,7 @@
             <div id="staff-login-box">
                 <label style="font-size: 11px; text-align: left; display: block; color: var(--slate-400); font-weight: 600;">SELECT PERSONNEL</label>
                 <select id="userSelect"></select>
+                <input type="password" id="userIdInput" placeholder="Enter your ID Number">
                 <button class="btn btn-success" style="width:100%; margin-top: 10px;" onclick="login('USER')">Clock In / Out</button>
                 <div style="margin: 20px 0; border-top: 1px solid var(--slate-100); position: relative;">
                     <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; font-size: 10px; color: var(--slate-400);">OR</span>
@@ -143,30 +160,32 @@
     </div>
 
     <aside class="sidebar">
-
-
         <div>
             <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management System</span></h2>
         
-		<div id="user-info" class="hidden" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 1.5rem;">
-            <p style="font-size: 10px; color: var(--slate-400); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">User Session</p>
-            <h3 id="displayUserName" style="margin: 0; color: var(--dark); font-size: 1.1rem; font-weight: 800;">--</h3>
-        </div>
-		
-            <div id="top-nav-actions" class="hidden" style="margin-top: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
+            <div id="user-info" class="hidden" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 1rem;">
+                <p style="font-size: 10px; color: var(--slate-400); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">User Session</p>
+                <h3 id="displayUserName" style="margin: 0; color: var(--dark); font-size: 1.1rem; font-weight: 800;">--</h3>
+            </div>
+            
+            <div id="top-nav-actions" class="hidden" style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
                 <button class="btn btn-danger" style="width: 100%; font-size: 10px;" onclick="location.reload()">Sign Out</button>
+                <div id="admin-only-ops" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
+                    <button class="btn btn-success" style="width: 100%;" onclick="exportToExcel()">Download XLS</button>
+                    <button class="btn btn-outline" style="width: 100%; border-color: var(--danger); color: var(--danger);" onclick="clearAllLogs()">Clear All Logs</button>
+                </div>
             </div>
         </div>
         
         <div id="admin-tools" class="hidden">
-            <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Manage Personnel</div>
-            <input type="text" id="newStaffName" placeholder="Full Name">
-            <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="addStaff()">+ Add Member</button>
-            <div id="staff-list-admin"></div>
-            
-            <div style="font-size: 10px; color: var(--slate-400); font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; text-transform: uppercase;">Operations</div>
-            <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="exportToExcel()">Download XLS</button>
-            <button class="btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="clearAllLogs()">Clear All Logs</button>
+            <details style="margin-top: 1rem;">
+                <summary>Manage Personnel</summary>
+                <div style="padding-top: 10px;">
+                    <input type="text" id="newStaffName" placeholder="Full Name" style="margin-bottom: 5px;">
+                    <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="addStaff()">+ Add Member</button>
+                    <div id="staff-list-admin" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </details>
         </div>
     </aside>
 
@@ -174,8 +193,7 @@
         <div id="admin-view" class="hidden">
             <div class="card">
                 <h4 style="color: var(--dark); margin-top:0;">📡 Personnel Live Status</h4>
-                <div id="liveStatusContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-                    </div>
+                <div id="liveStatusContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
             </div>
 
             <div class="card">
@@ -223,6 +241,31 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // ID Mapping
+        const STAFF_IDS = {
+            "DE PAZ, ROLANDO C.": "071090",
+            "DIAZ, MARIA ANNA D.": "122289",
+			"ELEAZAR, DELIA C.": "071511",
+			"EUGENIO, ALLYSSA COLLEEN B.": "097319",
+			"GAPILANGO, MARK LESTER R.": "120330",
+			"GATPANDAN, OSCAR H.": "012073",
+			"GUIRUELA, CARLA JANE L.": "11003",
+			"HERNANDEZ, ROMELITA F.": "055476",
+			"HILARIO, DENNIS C.": "012152",
+			"JAGMIS, CHERRIE ANN P.": "123010",
+			"MORENO, CHERRY B.": "068109",
+			"ODSINADA, ERIC O.": "013046",
+			"POLICARPIO, SHERYL LYN S.": "124467",
+			"RUIZ, MARIA REGINA C.": "100663",
+			"SORIMA, JESUS NIÑO M.": "074209",
+			"UNICO, JENNY P.": "123002",
+			"VILLEGAS, MAYLYN Q.": "14269",
+			"MANLAPAZ, REINELL L.": "114856",
+			"ANDRADA, MARNITO C.": "126445",
+			"FERNANDEZ, FUNDADOR C.": "118496",
+            "Default": "1234" // Default ID for newly added staff
+        };
+
         const ADMIN_PASS = "admin123";
         let currentUser = null, userRole = null;
         let staff = [], logs = [], active = {};
@@ -232,8 +275,7 @@
             let hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
             const seconds = now.getSeconds().toString().padStart(2, '0');
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
+            hours = hours % 12 || 12; 
             const timeStr = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
             const clockEl = document.getElementById('live-clock');
             if(clockEl) clockEl.innerText = timeStr;
@@ -244,14 +286,33 @@
             const now = new Date();
             let hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
+            hours = hours % 12 || 12; 
             return `${hours.toString().padStart(2, '0')}:${minutes}`;
         }
 
         onValue(ref(db, 'pso/'), (snapshot) => {
             const data = snapshot.val() || {};
-            staff = (data.staff || ["Jesus Niño M. Sorima", "Reinell L. Manlapaz"]).sort();
+            staff = (data.staff || ["DE PAZ, ROLANDO C.",
+									"DIAZ, MARIA ANNA D.",
+									"ELEAZAR, DELIA C.",
+									"EUGENIO, ALLYSSA COLLEEN B.",
+									"GAPILANGO, MARK LESTER R.",
+									"GATPANDAN, OSCAR H.",
+									"GUIRUELA, CARLA JANE L.",
+									"HERNANDEZ, ROMELITA F.",
+									"HILARIO, DENNIS C.",
+									"JAGMIS, CHERRIE ANN P.",
+									"MORENO, CHERRY B.",
+									"ODSINADA, ERIC O.",
+									"POLICARPIO, SHERYL LYN S.",
+									"RUIZ, MARIA REGINA C.",
+									"SORIMA, JESUS NIÑO M.",
+									"UNICO, JENNY P.",
+									"VILLEGAS, MAYLYN Q.",
+									"MANLAPAZ, REINELL L.",
+									"ANDRADA, MARNITO C.",
+									"FERNANDEZ, FUNDADOR C."
+									]).sort();
             const logsObj = data.logs || {};
             logs = Object.keys(logsObj).map(key => ({...logsObj[key], id: key}));
             logs.sort((a, b) => new Date(b.date + ' ' + (b.outRaw || b.out)) - new Date(a.date + ' ' + (a.inRaw || a.in)));
@@ -271,6 +332,17 @@
         }
 
         window.login = function(role) {
+            if (role === 'USER') {
+                const selectedName = document.getElementById('userSelect').value;
+                const enteredId = document.getElementById('userIdInput').value;
+                const correctId = STAFF_IDS[selectedName] || STAFF_IDS["Default"];
+
+                if (enteredId !== correctId) {
+                    alert("Invalid ID Number. Please try again.");
+                    return;
+                }
+            }
+
             userRole = role;
             currentUser = (role === 'ADMIN') ? 'Administrator' : document.getElementById('userSelect').value;
             document.getElementById('login-overlay').classList.add('hidden');
@@ -279,6 +351,7 @@
             document.getElementById('top-nav-actions').classList.remove('hidden');
             
             if (role === 'ADMIN') {
+                document.getElementById('admin-only-ops').classList.remove('hidden');
                 document.getElementById('admin-tools').classList.remove('hidden');
                 document.getElementById('admin-view').classList.remove('hidden');
                 render(); 
@@ -308,11 +381,11 @@
                 if (!s.onBreak) {
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
                 } else {
-                    const breakDuration = now - s.breakStart;
-                    if (breakDuration < 60000) {
-                        alert("Validation: Break duration must be at least 1 minute.");
-                        return;
-                    }
+			const breakDuration = now - s.breakStart;
+			if (breakDuration < 600000) { // 10 minutes in milliseconds
+			alert("Validation: Break duration must be at least 10 minutes.");
+			return;
+}
                     const newTotal = (s.breakTotal || 0) + breakDuration;
                     update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: newTotal, onBreak: false });
                 }
@@ -327,32 +400,6 @@
                 remove(ref(db, 'pso/active/' + userKey));
                 fb.innerText = "Shift ended at " + timeStr;
             }
-        }
-
-        function renderLiveStatus() {
-            const container = document.getElementById('liveStatusContainer');
-            if (!container) return;
-            container.innerHTML = staff.map(name => {
-                const userKey = name.replace(/\./g, '_');
-                const session = active[userKey];
-                let statusClass = 'status-offline';
-                let statusText = 'Offline';
-                if (session) {
-                    if (session.onBreak) {
-                        statusClass = 'status-break';
-                        statusText = 'On Break';
-                    } else {
-                        statusClass = 'status-working';
-                        statusText = 'Working';
-                    }
-                }
-                return `
-                    <div style="background:var(--slate-50); padding:12px; border-radius:8px; border:1px solid var(--slate-200); display:flex; flex-direction:column; gap:5px;">
-                        <span style="font-weight:700; font-size:12px; color:var(--dark);">${name}</span>
-                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
-                    </div>
-                `;
-            }).join('');
         }
 
         window.addStaff = function() {
@@ -381,6 +428,26 @@
                     remove(ref(db, 'pso/logs')).then(() => alert("History cleared."));
                 }
             }
+        }
+
+        function renderLiveStatus() {
+            const container = document.getElementById('liveStatusContainer');
+            if (!container) return;
+            container.innerHTML = staff.map(name => {
+                const userKey = name.replace(/\./g, '_');
+                const session = active[userKey];
+                let statusClass = 'status-offline', statusText = 'Offline';
+                if (session) {
+                    statusClass = session.onBreak ? 'status-break' : 'status-working';
+                    statusText = session.onBreak ? 'On Break' : 'Working';
+                }
+                return `
+                    <div style="background:var(--slate-50); padding:12px; border-radius:8px; border:1px solid var(--slate-200); display:flex; flex-direction:column; gap:5px;">
+                        <span style="font-weight:700; font-size:12px; color:var(--dark);">${name}</span>
+                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderStaffList() {
