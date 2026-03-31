@@ -131,6 +131,40 @@
         }
         details summary::after { content: '▼'; font-size: 8px; }
         details[open] summary::after { content: '▲'; }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* Stack sidebar on top of content */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 1rem;
+        border-right: none;
+        border-bottom: 1px solid var(--slate-200);
+    }
+
+    .main-content {
+        padding: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #clock-card {
+        margin: 20px auto;
+        width: 95%; /* Take up most of the screen width */
+    }
+
+    /* Make buttons easier to tap on mobile */
+    .btn {
+        padding: 15px 10px;
+        font-size: 14px;
+    }
+}
+		
     </style>
 </head>
 <body>
