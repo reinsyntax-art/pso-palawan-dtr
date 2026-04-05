@@ -39,9 +39,9 @@
 
         .login-card { 
             background: white; 
-            padding: 2.5rem; 
+            padding: 2rem; 
             border-radius: 16px; 
-            width: 350px; 
+            width: 400px; 
             text-align: center; 
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
@@ -53,6 +53,61 @@
             border: 1.5px solid var(--slate-200); border-radius: 8px; 
             font-size: 14px; transition: all 0.2s;
             box-sizing: border-box;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .cat-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid var(--slate-200);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .cat-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .admin-status-filter {
+            display: flex;
+            background: var(--slate-100);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+
+        .status-tab {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--slate-400);
+            cursor: pointer;
+            border-radius: 6px;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .status-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .sidebar { 
@@ -109,62 +164,22 @@
         #clock-card { text-align: center; border-top: 4px solid var(--primary); }
         #statusFeedback { font-size: 0.9rem; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); display: none; }
         
-        #live-clock {
-            font-size: 2.5rem;
+        #live-clock, #admin-sidebar-clock {
             font-weight: 800;
             color: var(--dark);
-            margin: 10px 0 25px 0;
             font-family: 'Courier New', Courier, monospace;
         }
 
-        details summary {
-            list-style: none;
-            cursor: pointer;
-            font-size: 10px;
-            color: var(--slate-400);
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        #live-clock { font-size: 2.5rem; margin: 10px 0 25px 0; }
+        #admin-sidebar-clock { font-size: 1.2rem; color: var(--primary); margin-bottom: 1rem; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; padding: 1rem; border-right: none; border-bottom: 1px solid var(--slate-200); }
+            .main-content { padding: 1rem; width: 100%; box-sizing: border-box; }
+            #clock-card { margin: 20px auto; width: 95%; }
+            .btn { padding: 15px 10px; font-size: 14px; }
         }
-        details summary::after { content: '▼'; font-size: 8px; }
-        details[open] summary::after { content: '▲'; }
-
-/* Mobile Responsive Adjustments */
-@media (max-width: 768px) {
-    body {
-        flex-direction: column; /* Stack sidebar on top of content */
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 1rem;
-        border-right: none;
-        border-bottom: 1px solid var(--slate-200);
-    }
-
-    .main-content {
-        padding: 1rem;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    #clock-card {
-        margin: 20px auto;
-        width: 95%; /* Take up most of the screen width */
-    }
-
-    /* Make buttons easier to tap on mobile */
-    .btn {
-        padding: 15px 10px;
-        font-size: 14px;
-    }
-}
-		
     </style>
 </head>
 <body>
@@ -181,6 +196,13 @@
             </div>
 
             <div id="staff-login-box">
+                <label style="font-size: 11px; text-align: left; display: block; color: var(--slate-400); font-weight: 600; margin-bottom: 8px;">PERSONNEL CATEGORY</label>
+                <div class="category-filter">
+                    <button class="cat-btn active" onclick="setCategory('REGULAR', this)">REGULAR</button>
+                    <button class="cat-btn" onclick="setCategory('CONTRACTUAL', this)">CONTRACTUAL</button>
+                    <button class="cat-btn" onclick="setCategory('COS/JO', this)">COS/JO</button>
+                </div>
+
                 <label style="font-size: 11px; text-align: left; display: block; color: var(--slate-400); font-weight: 600;">SELECT PERSONNEL</label>
                 <select id="userSelect"></select>
                 <input type="password" id="userIdInput" placeholder="Enter your ID Number">
@@ -196,6 +218,7 @@
     <aside class="sidebar">
         <div>
             <h2>PSO PALAWAN<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management System</span></h2>
+            <div id="admin-sidebar-clock" class="hidden">00:00:00</div>
         
             <div id="user-info" class="hidden" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100); margin-bottom: 1rem;">
                 <p style="font-size: 10px; color: var(--slate-400); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">User Session</p>
@@ -213,9 +236,14 @@
         
         <div id="admin-tools" class="hidden">
             <details style="margin-top: 1rem;">
-                <summary>Manage Personnel</summary>
+                <summary style="list-style:none; cursor:pointer; font-size:10px; font-weight:700; color:var(--slate-400); text-transform:uppercase; padding:10px 0; display:flex; justify-content:space-between;">Manage Personnel <span>▼</span></summary>
                 <div style="padding-top: 10px;">
                     <input type="text" id="newStaffName" placeholder="Full Name" style="margin-bottom: 5px;">
+                    <select id="newStaffCat" style="margin-bottom: 5px;">
+                        <option value="REGULAR">REGULAR</option>
+                        <option value="CONTRACTUAL">CONTRACTUAL</option>
+                        <option value="COS/JO">COS/JO</option>
+                    </select>
                     <button class="btn btn-primary" style="width:100%; margin-bottom: 15px;" onclick="addStaff()">+ Add Member</button>
                     <div id="staff-list-admin" style="max-height: 200px; overflow-y: auto;"></div>
                 </div>
@@ -225,11 +253,6 @@
 
     <main class="main-content">
         <div id="admin-view" class="hidden">
-            <div class="card">
-                <h4 style="color: var(--dark); margin-top:0;">📡 Personnel Live Status</h4>
-                <div id="liveStatusContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
-            </div>
-
             <div class="card">
                 <h4 style="color: var(--dark); margin-top:0;">📋 Attendance History (Cloud)</h4>
                 <div style="overflow-x: auto; margin-top: 20px;">
@@ -242,6 +265,23 @@
                         <tbody id="logTableBody"></tbody>
                     </table>
                 </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <h4 style="color: var(--dark); margin:0;">📡 Personnel Live Status</h4>
+                    <input type="text" id="statusSearch" placeholder="🔍 Search name..." 
+                           style="width: 200px; margin: 0; padding: 8px 12px; font-size: 12px;" 
+                           onkeyup="renderLiveStatus()">
+                </div>
+
+                <div class="admin-status-filter">
+                    <button class="status-tab active" onclick="setAdminStatusFilter('REGULAR', this)">Regular</button>
+                    <button class="status-tab" onclick="setAdminStatusFilter('CONTRACTUAL', this)">Contractual</button>
+                    <button class="status-tab" onclick="setAdminStatusFilter('COS/JO', this)">COS/JO</button>
+                </div>
+
+                <div id="liveStatusContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;"></div>
             </div>
         </div>
 
@@ -275,44 +315,61 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // ID Mapping
         const STAFF_IDS = {
-            "DE PAZ, ROLANDO C.": "071090",
-            "DIAZ, MARIA ANNA D.": "122289",
-			"ELEAZAR, DELIA C.": "071511",
-			"EUGENIO, ALLYSSA COLLEEN B.": "097319",
-			"GAPILANGO, MARK LESTER R.": "120330",
-			"GATPANDAN, OSCAR H.": "012073",
-			"GUIRUELA, CARLA JANE L.": "11003",
-			"HERNANDEZ, ROMELITA F.": "055476",
-			"HILARIO, DENNIS C.": "012152",
-			"JAGMIS, CHERRIE ANN P.": "123010",
-			"MORENO, CHERRY B.": "068109",
-			"ODSINADA, ERIC O.": "013046",
-			"POLICARPIO, SHERYL LYN S.": "124467",
-			"RUIZ, MARIA REGINA C.": "100663",
-			"SORIMA, JESUS NIÑO M.": "074209",
-			"UNICO, JENNY P.": "123002",
-			"VILLEGAS, MAYLYN Q.": "14269",
-			"MANLAPAZ, REINELL L.": "114856",
-			"ANDRADA, MARNITO C.": "126445",
-			"FERNANDEZ, FUNDADOR C.": "118496",
-            "Default": "1234" // Default ID for newly added staff
+            "DE PAZ, ROLANDO C.": "071090", "DIAZ, MARIA ANNA D.": "122289", "ELEAZAR, DELIA C.": "071511",
+            "EUGENIO, ALLYSSA COLLEEN B.": "097319", "GAPILANGO, MARK LESTER R.": "120330", "GATPANDAN, OSCAR H.": "012073",
+            "GUIRUELA, CARLA JANE L.": "11003", "HERNANDEZ, ROMELITA F.": "055476", "HILARIO, DENNIS C.": "012152",
+            "JAGMIS, CHERRIE ANN P.": "123010", "MORENO, CHERRY B.": "068109", "ODSINADA, ERIC O.": "013046",
+            "POLICARPIO, SHERYL LYN S.": "124467", "RUIZ, MARIA REGINA C.": "100663", "SORIMA, JESUS NIÑO M.": "074209",
+            "UNICO, JENNY P.": "123002", "VILLEGAS, MAYLYN Q.": "14269", "MANLAPAZ, REINELL L.": "114856",
+            "ANDRADA, MARNITO C.": "126445", "FERNANDEZ, FUNDADOR C.": "118496", 
+            "BISNAR, KENNETH": "1234", "BOCALA, SONNY BOY M.": "1234", "CAABAY, BILLY JOSEPH P.": "1234",
+            "FELIZARTE, LIZA B.": "1234", "MACADAYA, RAYMUNDO S.": "1234", "MAGALLANES, ARIEL D.": "1234",
+            "OPERIANO, MONICA D.": "1234", "GUIÑEZ, CHERISSA C.": "1234", "LAROT, SHERRY A.": "1234",
+            "ABBAS, AL YASSER D.": "1234", "AMMAD, ABDULMAHDIE A.": "1234", "INJU, NAFISA A.": "1234",
+            "NALICA, REY TIMOTHY H.": "1234", "REALCO, MARIA ELIZABETH H.": "1234", "SENADOR, MARIA GIANENA C.": "1234",
+            "PARANGUE, JESSEL A.": "1234", "Default": "1234"
         };
 
         const ADMIN_PASS = "admin123";
-        let currentUser = null, userRole = null;
+        let currentUser = null, userRole = null, currentCategory = 'REGULAR', adminStatusView = 'REGULAR';
         let staff = [], logs = [], active = {};
+
+        const DEFAULT_STAFF = [
+            { name: "DE PAZ, ROLANDO C.", cat: "REGULAR" }, { name: "DIAZ, MARIA ANNA D.", cat: "REGULAR" },
+            { name: "ELEAZAR, DELIA C.", cat: "REGULAR" }, { name: "EUGENIO, ALLYSSA COLLEEN B.", cat: "REGULAR" },
+            { name: "GAPILANGO, MARK LESTER R.", cat: "REGULAR" }, { name: "GATPANDAN, OSCAR H.", cat: "REGULAR" },
+            { name: "GUIRUELA, CARLA JANE L.", cat: "REGULAR" }, { name: "HERNANDEZ, ROMELITA F.", cat: "REGULAR" },
+            { name: "HILARIO, DENNIS C.", cat: "REGULAR" }, { name: "JAGMIS, CHERRIE ANN P.", cat: "REGULAR" },
+            { name: "MORENO, CHERRY B.", cat: "REGULAR" }, { name: "ODSINADA, ERIC O.", cat: "REGULAR" },
+            { name: "POLICARPIO, SHERYL LYN S.", cat: "REGULAR" }, { name: "RUIZ, MARIA REGINA C.", cat: "REGULAR" },
+            { name: "SORIMA, JESUS NIÑO M.", cat: "REGULAR" }, { name: "UNICO, JENNY P.", cat: "REGULAR" },
+            { name: "VILLEGAS, MAYLYN Q.", cat: "REGULAR" }, 
+            { name: "MANLAPAZ, REINELL L.", cat: "CONTRACTUAL" }, { name: "ANDRADA, MARNITO C.", cat: "CONTRACTUAL" },
+            { name: "FERNANDEZ, FUNDADOR C.", cat: "CONTRACTUAL" },
+            { name: "BISNAR, KENNETH", cat: "COS/JO" }, { name: "BOCALA, SONNY BOY M.", cat: "COS/JO" },
+            { name: "CAABAY, BILLY JOSEPH P.", cat: "COS/JO" }, { name: "FELIZARTE, LIZA B.", cat: "COS/JO" },
+            { name: "MACADAYA, RAYMUNDO S.", cat: "COS/JO" }, { name: "MAGALLANES, ARIEL D.", cat: "COS/JO" },
+            { name: "OPERIANO, MONICA D.", cat: "COS/JO" }, { name: "GUIÑEZ, CHERISSA C.", cat: "COS/JO" },
+            { name: "LAROT, SHERRY A.", cat: "COS/JO" }, { name: "ABBAS, AL YASSER D.", cat: "COS/JO" },
+            { name: "AMMAD, ABDULMAHDIE A.", cat: "COS/JO" }, { name: "INJU, NAFISA A.", cat: "COS/JO" },
+            { name: "NALICA, REY TIMOTHY H.", cat: "COS/JO" }, { name: "REALCO, MARIA ELIZABETH H.", cat: "COS/JO" },
+            { name: "SENADOR, MARIA GIANENA C.", cat: "COS/JO" }, { name: "PARANGUE, JESSEL A.", cat: "COS/JO" }
+        ];
 
         function updateLiveClock() {
             const now = new Date();
             let hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
             const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12; 
-            const timeStr = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
+            const timeStr = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            
             const clockEl = document.getElementById('live-clock');
+            const adminClockEl = document.getElementById('admin-sidebar-clock');
             if(clockEl) clockEl.innerText = timeStr;
+            if(adminClockEl) adminClockEl.innerText = timeStr;
         }
         setInterval(updateLiveClock, 1000);
 
@@ -326,27 +383,7 @@
 
         onValue(ref(db, 'pso/'), (snapshot) => {
             const data = snapshot.val() || {};
-            staff = (data.staff || ["DE PAZ, ROLANDO C.",
-									"DIAZ, MARIA ANNA D.",
-									"ELEAZAR, DELIA C.",
-									"EUGENIO, ALLYSSA COLLEEN B.",
-									"GAPILANGO, MARK LESTER R.",
-									"GATPANDAN, OSCAR H.",
-									"GUIRUELA, CARLA JANE L.",
-									"HERNANDEZ, ROMELITA F.",
-									"HILARIO, DENNIS C.",
-									"JAGMIS, CHERRIE ANN P.",
-									"MORENO, CHERRY B.",
-									"ODSINADA, ERIC O.",
-									"POLICARPIO, SHERYL LYN S.",
-									"RUIZ, MARIA REGINA C.",
-									"SORIMA, JESUS NIÑO M.",
-									"UNICO, JENNY P.",
-									"VILLEGAS, MAYLYN Q.",
-									"MANLAPAZ, REINELL L.",
-									"ANDRADA, MARNITO C.",
-									"FERNANDEZ, FUNDADOR C."
-									]).sort();
+            staff = (data.staff || DEFAULT_STAFF).sort((a, b) => a.name.localeCompare(b.name));
             const logsObj = data.logs || {};
             logs = Object.keys(logsObj).map(key => ({...logsObj[key], id: key}));
             logs.sort((a, b) => new Date(b.date + ' ' + (b.outRaw || b.out)) - new Date(a.date + ' ' + (a.inRaw || a.in)));
@@ -354,10 +391,25 @@
             refreshUI();
         });
 
+        window.setCategory = function(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            refreshUI();
+        }
+
+        window.setAdminStatusFilter = function(cat, btn) {
+            adminStatusView = cat;
+            document.querySelectorAll('.status-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderLiveStatus();
+        }
+
         function refreshUI() {
             const userSelect = document.getElementById('userSelect');
             if (userSelect) {
-                userSelect.innerHTML = staff.map(s => `<option value="${s}">${s}</option>`).join('');
+                const filtered = staff.filter(s => s.cat === currentCategory);
+                userSelect.innerHTML = filtered.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
             }
             renderStaffList();
             renderLiveStatus();
@@ -370,24 +422,17 @@
                 const selectedName = document.getElementById('userSelect').value;
                 const enteredId = document.getElementById('userIdInput').value;
                 const correctId = STAFF_IDS[selectedName] || STAFF_IDS["Default"];
-
-                if (enteredId !== correctId) {
-                    alert("Invalid ID Number. Please try again.");
-                    return;
-                }
+                if (enteredId !== correctId) return alert("Invalid ID Number.");
             }
-
             userRole = role;
             currentUser = (role === 'ADMIN') ? 'Administrator' : document.getElementById('userSelect').value;
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('displayUserName').innerText = currentUser;
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('top-nav-actions').classList.remove('hidden');
-            
             if (role === 'ADMIN') {
-                document.getElementById('admin-only-ops').classList.remove('hidden');
-                document.getElementById('admin-tools').classList.remove('hidden');
-                document.getElementById('admin-view').classList.remove('hidden');
+                document.getElementById('admin-sidebar-clock').classList.remove('hidden');
+                ['admin-only-ops', 'admin-tools', 'admin-view'].forEach(id => document.getElementById(id).classList.remove('hidden'));
                 render(); 
             } else {
                 document.getElementById('clock-card').classList.remove('hidden');
@@ -396,41 +441,25 @@
         }
 
         window.clockAction = function(type) {
-            const now = Date.now();
-            const timeStr = getFormattedTime();
+            const now = Date.now(), timeStr = getFormattedTime();
             const userKey = currentUser.replace(/\./g, '_');
-            let s = active[userKey];
-            let fb = document.getElementById('statusFeedback');
+            let s = active[userKey], fb = document.getElementById('statusFeedback');
             fb.style.display = "block";
-
             if (type === 'IN') {
                 set(ref(db, 'pso/active/' + userKey), { 
-                    name: currentUser, 
-                    start: now, startTime: timeStr, date: new Date().toLocaleDateString(), 
+                    name: currentUser, start: now, startTime: timeStr, date: new Date().toLocaleDateString(), 
                     breakOut: "--", breakIn: "--", breakTotal: 0, onBreak: false 
                 });
                 fb.innerText = "Shift started at " + timeStr;
-            } 
-            else if (type === 'BREAK' && s) {
+            } else if (type === 'BREAK' && s) {
                 if (!s.onBreak) {
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
                 } else {
-			const breakDuration = now - s.breakStart;
-			if (breakDuration < 60000) { // 10 minutes in milliseconds
-			alert("Validation: Break duration must be at least 1 minute.");
-			return;
-}
-                    const newTotal = (s.breakTotal || 0) + breakDuration;
-                    update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: newTotal, onBreak: false });
+                    if (now - s.breakStart < 60000) return alert("Break must be at least 1 minute.");
+                    update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: (s.breakTotal || 0) + (now - s.breakStart), onBreak: false });
                 }
-            } 
-            else if (type === 'OUT' && s) {
-                const logEntry = {
-                    name: currentUser, date: s.date, in: s.startTime,
-                    bOut: s.breakOut, bIn: s.breakIn, out: timeStr,
-                    netMs: (now - s.start) - (s.breakTotal || 0)
-                };
-                push(ref(db, 'pso/logs'), logEntry);
+            } else if (type === 'OUT' && s) {
+                push(ref(db, 'pso/logs'), { name: currentUser, date: s.date, in: s.startTime, bOut: s.breakOut, bIn: s.breakIn, out: timeStr, netMs: (now - s.start) - (s.breakTotal || 0) });
                 remove(ref(db, 'pso/active/' + userKey));
                 fb.innerText = "Shift ended at " + timeStr;
             }
@@ -438,81 +467,60 @@
 
         window.addStaff = function() {
             const name = document.getElementById('newStaffName').value.trim();
-            if (!name || staff.includes(name)) return alert("Invalid or duplicate name.");
-            staff.push(name);
-            set(ref(db, 'pso/staff'), staff.sort());
+            const cat = document.getElementById('newStaffCat').value;
+            if (!name || staff.find(x => x.name === name)) return alert("Invalid or duplicate name.");
+            staff.push({ name, cat });
+            set(ref(db, 'pso/staff'), staff);
             document.getElementById('newStaffName').value = "";
         }
 
         window.deleteStaff = function(n) {
-            if(confirm(`Remove ${n}?`)) {
-                const newStaff = staff.filter(x => x !== n);
-                set(ref(db, 'pso/staff'), newStaff.sort());
-            }
+            if(confirm(`Remove ${n}?`)) set(ref(db, 'pso/staff'), staff.filter(x => x.name !== n));
         }
 
-        window.deleteLog = function(id) {
-            if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id));
-        }
+        window.deleteLog = function(id) { if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id)); }
+        window.clearAllLogs = function() { if (confirm("Delete ALL history?") && prompt("Type 'RESET'") === "RESET") remove(ref(db, 'pso/logs')); }
 
-        window.clearAllLogs = function() {
-            if (confirm("Delete ALL history?")) {
-                let confirmation = prompt("Type 'RESET' to confirm");
-                if (confirmation === "RESET") {
-                    remove(ref(db, 'pso/logs')).then(() => alert("History cleared."));
-                }
-            }
-        }
-
-        function renderLiveStatus() {
+        window.renderLiveStatus = function() {
             const container = document.getElementById('liveStatusContainer');
+            const search = document.getElementById('statusSearch')?.value.toLowerCase() || "";
             if (!container) return;
-            container.innerHTML = staff.map(name => {
-                const userKey = name.replace(/\./g, '_');
-                const session = active[userKey];
-                let statusClass = 'status-offline', statusText = 'Offline';
-                if (session) {
-                    statusClass = session.onBreak ? 'status-break' : 'status-working';
-                    statusText = session.onBreak ? 'On Break' : 'Working';
-                }
-                return `
-                    <div style="background:var(--slate-50); padding:12px; border-radius:8px; border:1px solid var(--slate-200); display:flex; flex-direction:column; gap:5px;">
-                        <span style="font-weight:700; font-size:12px; color:var(--dark);">${name}</span>
-                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+
+            const filtered = staff.filter(s => 
+                s.cat === adminStatusView && 
+                s.name.toLowerCase().includes(search)
+            );
+
+            container.innerHTML = filtered.map(s => {
+                const session = active[s.name.replace(/\./g, '_')];
+                const statusClass = session ? (session.onBreak ? 'status-break' : 'status-working') : 'status-offline';
+                return `<div style="background:white; padding:12px; border-radius:8px; border:1px solid var(--slate-200); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="font-size:9px; font-weight:800; color:var(--slate-400); margin-bottom:2px;">${s.cat}</div>
+                    <span style="font-weight:700; font-size:12px; color:var(--dark);">${s.name}</span>
+                    <div style="margin-top:5px;">
+                        <span class="status-badge ${statusClass}">${session ? (session.onBreak ? 'On Break' : 'Working') : 'Offline'}</span>
                     </div>
-                `;
-            }).join('');
+                    ${session ? `<div style="font-size:10px; color:var(--slate-400); margin-top:5px;">In: ${session.startTime}</div>` : ''}
+                </div>`;
+            }).join('') || `<p style="grid-column: 1/-1; text-align:center; color:var(--slate-400); font-size:12px;">No matches found.</p>`;
         }
 
         function renderStaffList() {
             const container = document.getElementById('staff-list-admin');
-            if (container) {
-                container.innerHTML = staff.map(s => `
-                    <div class="staff-tag"><span>${s}</span>
-                    <button onclick="deleteStaff('${s}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold;">&times;</button></div>`).join('');
-            }
+            if (container) container.innerHTML = staff.map(s => `<div class="staff-tag"><span>[${s.cat}] ${s.name}</span><button onclick="deleteStaff('${s.name}')" style="color:var(--danger); background:none; border:none;">&times;</button></div>`).join('');
         }
 
         function render() {
             const tbody = document.getElementById('logTableBody');
             if (!tbody) return;
-            tbody.innerHTML = logs.map((l) => `
-                <tr>
-                    <td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td>
-                    <td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td>
-                    <td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td>
-                    <td><button onclick="deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:18px;">&times;</button></td>
-                </tr>`).join('');
+            tbody.innerHTML = logs.map((l) => `<tr><td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td><td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td><td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td><td><button onclick="deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; font-size:18px;">&times;</button></td></tr>`).join('');
         }
 
         function updateButtonStates() {
-            const userKey = currentUser ? currentUser.replace(/\./g, '_') : null;
-            const s = active[userKey];
+            const s = active[currentUser?.replace(/\./g, '_')];
             const bIn = document.getElementById('btnClockIn'), bBr = document.getElementById('btnBreak'), bOut = document.getElementById('btnClockOut');
             if(!bIn) return;
-            bIn.disabled = !!s;
-            bBr.disabled = !s;
-            bOut.disabled = !s || s?.onBreak;
+            bIn.disabled = !!s; bBr.disabled = !s; bOut.disabled = !s || s?.onBreak;
             if (s) bBr.innerText = s.onBreak ? "Return from Break" : "Break Out";
         }
 
@@ -522,16 +530,8 @@
         }
 
         window.verifyAdmin = () => { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); };
-        window.toggleLogin = (isA) => { 
-            document.getElementById('admin-login-box').classList.toggle('hidden', !isA);
-            document.getElementById('staff-login-box').classList.toggle('hidden', isA);
-        };
-        
-        window.exportToExcel = () => {
-            const table = document.getElementById("dtrTable");
-            let html = table.outerHTML.replace(/<th>Action<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, "");
-            window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
-        };
+        window.toggleLogin = (isA) => { document.getElementById('admin-login-box').classList.toggle('hidden', !isA); document.getElementById('staff-login-box').classList.toggle('hidden', isA); };
+        window.exportToExcel = () => { window.open('data:application/vnd.ms-excel,' + encodeURIComponent(document.getElementById("dtrTable").outerHTML.replace(/<th>Action<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, ""))); };
     </script>
 </body>
 </html>
