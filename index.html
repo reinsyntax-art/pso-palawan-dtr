@@ -229,13 +229,13 @@
                 <button class="btn btn-danger" style="width: 100%; font-size: 10px;" onclick="location.reload()">Sign Out</button>
                 <div id="admin-only-ops" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
                     <button class="btn btn-success" style="width: 100%;" onclick="exportToExcel()">Download XLS</button>
-                    <button class="btn btn-outline" style="width: 100%; border-color: var(--danger); color: var(--danger);" onclick="clearAllLogs()">Clear All Logs</button>
+                    <button id="super-admin-clear" class="btn btn-outline hidden" style="border-color: var(--danger); color: var(--danger);" onclick="clearAllLogs()">Clear All Logs</button>
                 </div>
             </div>
         </div>
         
         <div id="admin-tools" class="hidden">
-            <details style="margin-top: 1rem;">
+            <details id="manage-personnel-tool" style="margin-top: 1rem;" class="hidden">
                 <summary style="list-style:none; cursor:pointer; font-size:10px; font-weight:700; color:var(--slate-400); text-transform:uppercase; padding:10px 0; display:flex; justify-content:space-between;">Manage Personnel <span>▼</span></summary>
                 <div style="padding-top: 10px;">
                     <input type="text" id="newStaffName" placeholder="Full Name" style="margin-bottom: 5px;">
@@ -253,6 +253,42 @@
 
     <main class="main-content">
         <div id="admin-view" class="hidden">
+            <div id="super-admin-manual-entry" class="hidden">
+                <button id="toggleManualLog" class="btn btn-outline" style="width: 100%; margin-bottom: 10px; border-style: dashed;" onclick="toggleManualEntry()">
+                    📝 Show Manual Log Entry
+                </button>
+                <div id="manualEntryContainer" class="card hidden" style="border-left: 4px solid var(--warning);">
+                    <h4 style="color: var(--dark); margin-top:0;">📝 Manual Log Entry</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; align-items: end;">
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">PERSONNEL</label>
+                            <select id="manualName" style="margin-bottom:0;"></select>
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">DATE</label>
+                            <input type="date" id="manualDate" style="margin-bottom:0;">
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">TIME IN</label>
+                            <input type="time" id="manualIn" style="margin-bottom:0;">
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">BREAK OUT</label>
+                            <input type="time" id="manualBOut" style="margin-bottom:0;">
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">BREAK IN</label>
+                            <input type="time" id="manualBIn" style="margin-bottom:0;">
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: var(--slate-400);">TIME OUT</label>
+                            <input type="time" id="manualOut" style="margin-bottom:0;">
+                        </div>
+                        <button class="btn btn-warning" onclick="saveManualLog()">Add Log</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <h4 style="color: var(--dark); margin-top:0;">📋 Attendance History (Cloud)</h4>
                 <div style="overflow-x: auto; margin-top: 20px;">
@@ -332,6 +368,8 @@
         };
 
         const ADMIN_PASS = "admin123";
+        const SUPER_ADMIN_PASS = "super123";
+
         let currentUser = null, userRole = null, currentCategory = 'REGULAR', adminStatusView = 'REGULAR';
         let staff = [], logs = [], active = {};
 
@@ -407,13 +445,19 @@
 
         function refreshUI() {
             const userSelect = document.getElementById('userSelect');
+            const manualNameSelect = document.getElementById('manualName');
+            
             if (userSelect) {
                 const filtered = staff.filter(s => s.cat === currentCategory);
                 userSelect.innerHTML = filtered.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
             }
+            if (manualNameSelect) {
+                manualNameSelect.innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            }
+
             renderStaffList();
             renderLiveStatus();
-            if (userRole === 'ADMIN') render(); 
+            if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') render(); 
             if (currentUser && userRole === 'USER') updateButtonStates();
         }
 
@@ -424,15 +468,26 @@
                 const correctId = STAFF_IDS[selectedName] || STAFF_IDS["Default"];
                 if (enteredId !== correctId) return alert("Invalid ID Number.");
             }
+            
             userRole = role;
-            currentUser = (role === 'ADMIN') ? 'Administrator' : document.getElementById('userSelect').value;
+            currentUser = (role === 'SUPER_ADMIN') ? 'Super Administrator' : (role === 'ADMIN' ? 'Administrator' : document.getElementById('userSelect').value);
+            
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('displayUserName').innerText = currentUser;
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('top-nav-actions').classList.remove('hidden');
-            if (role === 'ADMIN') {
+
+            if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
                 document.getElementById('admin-sidebar-clock').classList.remove('hidden');
-                ['admin-only-ops', 'admin-tools', 'admin-view'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                document.getElementById('admin-view').classList.remove('hidden');
+                document.getElementById('admin-only-ops').classList.remove('hidden');
+                document.getElementById('admin-tools').classList.remove('hidden');
+
+                if (role === 'SUPER_ADMIN') {
+                    document.getElementById('super-admin-manual-entry').classList.remove('hidden');
+                    document.getElementById('manage-personnel-tool').classList.remove('hidden');
+                    document.getElementById('super-admin-clear').classList.remove('hidden');
+                }
                 render(); 
             } else {
                 document.getElementById('clock-card').classList.remove('hidden');
@@ -465,6 +520,52 @@
             }
         }
 
+        window.toggleManualEntry = function() {
+            const container = document.getElementById('manualEntryContainer');
+            const btn = document.getElementById('toggleManualLog');
+            const isHidden = container.classList.toggle('hidden');
+            btn.innerText = isHidden ? "📝 Show Manual Log Entry" : "✖ Close Manual Entry";
+        };
+
+        window.saveManualLog = function() {
+            const name = document.getElementById('manualName').value;
+            const dateStr = document.getElementById('manualDate').value;
+            const tIn = document.getElementById('manualIn').value;
+            const tbOut = document.getElementById('manualBOut').value;
+            const tbIn = document.getElementById('manualBIn').value;
+            const tOut = document.getElementById('manualOut').value;
+
+            if(!dateStr || !tIn || !tOut) return alert("Please provide at least Date, In, and Out.");
+
+            const [y, m, d] = dateStr.split('-');
+            const formattedDate = `${parseInt(m)}/${parseInt(d)}/${y}`;
+            
+            const format12h = (t) => {
+                if(!t) return "--";
+                let [h, min] = t.split(':');
+                h = parseInt(h);
+                return `${(h % 12 || 12).toString().padStart(2, '0')}:${min}`;
+            };
+
+            const start = new Date(`${dateStr} ${tIn}`);
+            const end = new Date(`${dateStr} ${tOut}`);
+            let breakMs = 0;
+            if(tbOut && tbIn) {
+                breakMs = new Date(`${dateStr} ${tbIn}`) - new Date(`${dateStr} ${tbOut}`);
+            }
+            
+            let netMs = (end - start) - breakMs;
+            if(netMs < 0) return alert("Total time is negative. Check your entries.");
+
+            push(ref(db, 'pso/logs'), { 
+                name: name, date: formattedDate, in: format12h(tIn), 
+                bOut: format12h(tbOut), bIn: format12h(tbIn), 
+                out: format12h(tOut), netMs: netMs 
+            });
+
+            alert("Manual log added.");
+        }
+
         window.addStaff = function() {
             const name = document.getElementById('newStaffName').value.trim();
             const cat = document.getElementById('newStaffCat').value;
@@ -478,28 +579,27 @@
             if(confirm(`Remove ${n}?`)) set(ref(db, 'pso/staff'), staff.filter(x => x.name !== n));
         }
 
-        window.deleteLog = function(id) { if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id)); }
-        window.clearAllLogs = function() { if (confirm("Delete ALL history?") && prompt("Type 'RESET'") === "RESET") remove(ref(db, 'pso/logs')); }
+        window.deleteLog = function(id) { 
+            if(userRole !== 'SUPER_ADMIN') return alert("Super Admin privileges required.");
+            if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id)); 
+        }
+        
+        window.clearAllLogs = function() { 
+            if (confirm("Delete ALL history?") && prompt("Type 'RESET'") === "RESET") remove(ref(db, 'pso/logs')); 
+        }
 
         window.renderLiveStatus = function() {
             const container = document.getElementById('liveStatusContainer');
             const search = document.getElementById('statusSearch')?.value.toLowerCase() || "";
             if (!container) return;
-
-            const filtered = staff.filter(s => 
-                s.cat === adminStatusView && 
-                s.name.toLowerCase().includes(search)
-            );
-
+            const filtered = staff.filter(s => s.cat === adminStatusView && s.name.toLowerCase().includes(search));
             container.innerHTML = filtered.map(s => {
                 const session = active[s.name.replace(/\./g, '_')];
                 const statusClass = session ? (session.onBreak ? 'status-break' : 'status-working') : 'status-offline';
                 return `<div style="background:white; padding:12px; border-radius:8px; border:1px solid var(--slate-200); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                     <div style="font-size:9px; font-weight:800; color:var(--slate-400); margin-bottom:2px;">${s.cat}</div>
                     <span style="font-weight:700; font-size:12px; color:var(--dark);">${s.name}</span>
-                    <div style="margin-top:5px;">
-                        <span class="status-badge ${statusClass}">${session ? (session.onBreak ? 'On Break' : 'Working') : 'Offline'}</span>
-                    </div>
+                    <div style="margin-top:5px;"><span class="status-badge ${statusClass}">${session ? (session.onBreak ? 'On Break' : 'Working') : 'Offline'}</span></div>
                     ${session ? `<div style="font-size:10px; color:var(--slate-400); margin-top:5px;">In: ${session.startTime}</div>` : ''}
                 </div>`;
             }).join('') || `<p style="grid-column: 1/-1; text-align:center; color:var(--slate-400); font-size:12px;">No matches found.</p>`;
@@ -513,7 +613,7 @@
         function render() {
             const tbody = document.getElementById('logTableBody');
             if (!tbody) return;
-            tbody.innerHTML = logs.map((l) => `<tr><td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td><td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td><td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td><td><button onclick="deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; font-size:18px;">&times;</button></td></tr>`).join('');
+            tbody.innerHTML = logs.map((l) => `<tr><td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td><td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td><td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td><td>${userRole === 'SUPER_ADMIN' ? `<button onclick="deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; font-size:18px;">&times;</button>` : '--'}</td></tr>`).join('');
         }
 
         function updateButtonStates() {
@@ -529,7 +629,13 @@
             return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
         }
 
-        window.verifyAdmin = () => { if (document.getElementById('adminPass').value === ADMIN_PASS) login('ADMIN'); else alert("Incorrect Password"); };
+        window.verifyAdmin = () => { 
+            const pass = document.getElementById('adminPass').value;
+            if (pass === SUPER_ADMIN_PASS) login('SUPER_ADMIN');
+            else if (pass === ADMIN_PASS) login('ADMIN');
+            else alert("Incorrect Password"); 
+        };
+        
         window.toggleLogin = (isA) => { document.getElementById('admin-login-box').classList.toggle('hidden', !isA); document.getElementById('staff-login-box').classList.toggle('hidden', isA); };
         window.exportToExcel = () => { window.open('data:application/vnd.ms-excel,' + encodeURIComponent(document.getElementById("dtrTable").outerHTML.replace(/<th>Action<\/th>/g, "").replace(/<td><button.*?<\/button><\/td>/g, ""))); };
     </script>
