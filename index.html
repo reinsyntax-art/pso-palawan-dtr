@@ -367,7 +367,7 @@
         const db = getDatabase(app);
 
         const STAFF_IDS = {
-            "DE PAZ, ROLANDO C.": "071090", "DIAZ, MARIA ANNA D.": "122289", "ELEAZAR, DELIA C.": "071511",
+            "DE PAZ, ROLANDO C.": "071090", "DIAZ, MARIA ANNA D.": "122289",
             "EUGENIO, ALLYSSA COLLEEN B.": "097319", "GAPILANGO, MARK LESTER R.": "120330", "GATPANDAN, OSCAR H.": "012073",
             "GUIRUELA, CARLA JANE L.": "11003", "HERNANDEZ, ROMELITA F.": "055476", "HILARIO, DENNIS C.": "012152",
             "JAGMIS, CHERRIE ANN P.": "123010", "MORENO, CHERRY B.": "068109", "ODSINADA, ERIC O.": "013046",
@@ -389,7 +389,6 @@
 
         const DEFAULT_STAFF = [
             { name: "DE PAZ, ROLANDO C.", cat: "REGULAR" }, { name: "DIAZ, MARIA ANNA D.", cat: "REGULAR" },
-            { name: "ELEAZAR, DELIA C.", cat: "REGULAR" }, { name: "EUGENIO, ALLYSSA COLLEEN B.", cat: "REGULAR" },
             { name: "GAPILANGO, MARK LESTER R.", cat: "REGULAR" }, { name: "GATPANDAN, OSCAR H.", cat: "REGULAR" },
             { name: "GUIRUELA, CARLA JANE L.", cat: "REGULAR" }, { name: "HERNANDEZ, ROMELITA F.", cat: "REGULAR" },
             { name: "HILARIO, DENNIS C.", cat: "REGULAR" }, { name: "JAGMIS, CHERRIE ANN P.", cat: "REGULAR" },
@@ -517,7 +516,7 @@
                 if (!s.onBreak) {
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
                 } else {
-                    if (now - s.breakStart < 60000) return alert("Break must be at least 1 minute.");
+                    if (now - s.breakStart < 600000) return alert("Break must be at least 10 minute.");
                     update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: (s.breakTotal || 0) + (now - s.breakStart), onBreak: false });
                 }
             } else if (type === 'OUT' && s) {
