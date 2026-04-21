@@ -186,6 +186,8 @@
         #live-clock { font-size: 2.5rem; margin: 10px 0 25px 0; }
         #admin-sidebar-clock { font-size: 1.2rem; color: var(--primary); margin-bottom: 1rem; }
 
+        .edit-input { width: 80px !important; padding: 4px !important; margin: 0 !important; font-size: 11px !important; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; height: auto; position: relative; padding: 1rem; border-right: none; border-bottom: 1px solid var(--slate-200); }
@@ -199,7 +201,6 @@
 
     <div id="login-overlay">
         <div class="login-card">
-          
             <h2 style="font-size: 1.4rem; margin-top: 0;">PSO Pal</h2>
             <p style="color: var(--slate-400); font-size: 14px; margin-top: -15px; margin-bottom: 25px;">Cloud DTR Portal</p>
             
@@ -231,7 +232,6 @@
 
     <aside class="sidebar">
         <div>
-            
             <h2>PSO PAL<br><span style="color:var(--slate-400); font-size: 0.75rem; font-weight: 500;">Cloud Management Tools</span></h2>
             <div id="admin-sidebar-clock" class="hidden">00:00:00</div>
         
@@ -341,7 +341,7 @@
             <div id="live-clock">00:00:00</div>
             <div style="display: flex; gap: 12px;">
                 <button id="btnClockIn" class="btn btn-success" style="flex:1" onclick="clockAction('IN')">Clock In</button>
-                <button id="btnBreak" class="btn btn-warning" style="flex:1" onclick="clockAction('BREAK')">Break</button>
+                <button id="btnBreak" class="btn btn-warning" style="flex:1" onclick="clockAction('BREAK')")">Break</button>
                 <button id="btnClockOut" class="btn btn-danger" style="flex:1" onclick="clockAction('OUT')">Clock Out</button>
             </div>
             <p id="statusFeedback" style="margin-top: 20px;"></p>
@@ -578,6 +578,69 @@
             if(userRole !== 'SUPER_ADMIN') return alert("Super Admin privileges required.");
             if(confirm("Delete log?")) remove(ref(db, 'pso/logs/' + id)); 
         }
+
+        window.editLog = function(id) {
+            if (userRole !== 'SUPER_ADMIN') return alert("Super Admin privileges required.");
+            const log = logs.find(l => l.id === id);
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            
+            const to24h = (t12) => {
+                if (!t12 || t12 === "--") return "";
+                let [time, modifier] = t12.split(' ');
+                let [hours, minutes] = time.split(':');
+                if (hours === '12') hours = '00';
+                if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+                return `${hours.toString().padStart(2, '0')}:${minutes}`;
+            };
+
+            row.innerHTML = `
+                <td><b>${log.name}</b></td>
+                <td><input type="text" class="edit-input" value="${log.date}" id="edit-date-${id}"></td>
+                <td><input type="time" class="edit-input" value="${to24h(log.in)}" id="edit-in-${id}"></td>
+                <td><input type="time" class="edit-input" value="${to24h(log.bOut)}" id="edit-bout-${id}"></td>
+                <td><input type="time" class="edit-input" value="${to24h(log.bIn)}" id="edit-bin-${id}"></td>
+                <td><input type="time" class="edit-input" value="${to24h(log.out)}" id="edit-out-${id}"></td>
+                <td>--</td>
+                <td>
+                    <button onclick="saveEdit('${id}')" style="color:var(--success); background:none; border:none; cursor:pointer; font-size:16px;">✔</button>
+                    <button onclick="render()" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:16px;">✖</button>
+                </td>
+            `;
+        }
+
+        window.saveEdit = function(id) {
+            const format12h = (t) => {
+                if(!t) return "--";
+                let [h, min] = t.split(':');
+                h = parseInt(h);
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                return `${(h % 12 || 12).toString().padStart(2, '0')}:${min} ${ampm}`;
+            };
+
+            const newDate = document.getElementById(`edit-date-${id}`).value;
+            const tIn = document.getElementById(`edit-in-${id}`).value;
+            const tbOut = document.getElementById(`edit-bout-${id}`).value;
+            const tbIn = document.getElementById(`edit-bin-${id}`).value;
+            const tOut = document.getElementById(`edit-out-${id}`).value;
+
+            // Simple netMs calculation for edit
+            const dateParts = newDate.split('/');
+            const isoDate = `${dateParts[2]}-${dateParts[0].padStart(2,'0')}-${dateParts[1].padStart(2,'0')}`;
+            const start = new Date(`${isoDate} ${tIn}`);
+            const end = new Date(`${isoDate} ${tOut}`);
+            let breakMs = 0;
+            if(tbOut && tbIn) breakMs = new Date(`${isoDate} ${tbIn}`) - new Date(`${isoDate} ${tbOut}`);
+            let netMs = (end - start) - breakMs;
+
+            update(ref(db, 'pso/logs/' + id), {
+                date: newDate,
+                in: format12h(tIn),
+                bOut: format12h(tbOut),
+                bIn: format12h(tbIn),
+                out: format12h(tOut),
+                netMs: netMs > 0 ? netMs : 0
+            }).then(() => render());
+        }
         
         window.clearAllLogs = function() { 
             if (userRole !== 'SUPER_ADMIN') return;
@@ -609,7 +672,22 @@
         function render() {
             const tbody = document.getElementById('logTableBody');
             if (!tbody) return;
-            tbody.innerHTML = logs.map((l) => `<tr><td><b>${l.name}</b></td><td>${l.date}</td><td style="color:var(--success)">${l.in}</td><td>${l.bOut}</td><td>${l.bIn}</td><td style="color:var(--danger)">${l.out}</td><td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td><td>${userRole === 'SUPER_ADMIN' ? `<button onclick="window.deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>` : '--'}</td></tr>`).join('');
+            tbody.innerHTML = logs.map((l) => `
+                <tr data-id="${l.id}">
+                    <td><b>${l.name}</b></td>
+                    <td>${l.date}</td>
+                    <td style="color:var(--success)">${l.in}</td>
+                    <td>${l.bOut}</td>
+                    <td>${l.bIn}</td>
+                    <td style="color:var(--danger)">${l.out}</td>
+                    <td><span style="background:var(--slate-100); padding:4px 8px; border-radius:4px;">${msToTime(l.netMs)}</span></td>
+                    <td>
+                        ${userRole === 'SUPER_ADMIN' ? `
+                            <button onclick="window.editLog('${l.id}')" style="color:var(--primary); background:none; border:none; font-size:14px; cursor:pointer; margin-right:8px;">✏️</button>
+                            <button onclick="window.deleteLog('${l.id}')" style="color:var(--danger); background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
+                        ` : '--'}
+                    </td>
+                </tr>`).join('');
         }
         window.render = render;
 
