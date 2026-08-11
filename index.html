@@ -516,7 +516,7 @@
                 if (!s.onBreak) {
                     update(ref(db, 'pso/active/' + userKey), { breakStart: now, breakOut: timeStr, onBreak: true });
                 } else {
-                    if (now - s.breakStart < 600000) return alert("Break must be at least 10 minute.");
+                    if (now - s.breakStart < 120000) return alert("Break must be at least 2 minute.");
                     update(ref(db, 'pso/active/' + userKey), { breakIn: timeStr, breakTotal: (s.breakTotal || 0) + (now - s.breakStart), onBreak: false });
                 }
             } else if (type === 'OUT' && s) {
